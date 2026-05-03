@@ -1,65 +1,240 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 
 export default function Home() {
+  const [productName, setProductName] = useState("");
+  const [productType, setProductType] = useState("");
+  const [material, setMaterial] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [tone, setTone] = useState("Friendly and professional");
+  const [keywords, setKeywords] = useState("");
+
+  const [result, setResult] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleGenerate() {
+    setIsLoading(true);
+    setError("");
+    setResult("");
+    setCopied(false);
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productName,
+          productType,
+          material,
+          targetAudience,
+          tone,
+          keywords,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong.");
+      }
+
+      setResult(data.result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleCopy() {
+    if (!result) return;
+
+    await navigator.clipboard.writeText(result);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  }
+
+  function fillExample() {
+    setProductName("Personalized Dog Tag");
+    setProductType("Pet accessory");
+    setMaterial("Acrylic");
+    setTargetAudience("Dog owners and pet lovers");
+    setTone("Playful");
+    setKeywords("custom dog tag, dog mom gift, personalized pet tag");
+    setResult("");
+    setError("");
+    setCopied(false);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-slate-100 px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 text-center">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            AI Ecommerce Tool
+          </p>
+
+          <h1 className="text-4xl font-bold text-slate-900">
+            AI Product Description Generator
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+            Generate ecommerce titles, descriptions, bullet points, and SEO
+            keywords for product listings.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-xl font-semibold text-slate-900">
+                Product details
+              </h2>
+
+              <button
+                onClick={fillExample}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Fill example
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Product name *
+                </label>
+                <input
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  placeholder="Example: Personalized Dog Tag"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Product type *
+                </label>
+                <input
+                  value={productType}
+                  onChange={(e) => setProductType(e.target.value)}
+                  placeholder="Example: Pet accessory"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Material
+                </label>
+                <input
+                  value={material}
+                  onChange={(e) => setMaterial(e.target.value)}
+                  placeholder="Example: Acrylic, wood, cotton, metal"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Target audience
+                </label>
+                <input
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                  placeholder="Example: Dog owners, moms, gift buyers"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Tone
+                </label>
+                <select
+                  value={tone}
+                  onChange={(e) => setTone(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                >
+                  <option>Friendly and professional</option>
+                  <option>Playful</option>
+                  <option>Luxury</option>
+                  <option>Minimalist</option>
+                  <option>Emotional</option>
+                  <option>SEO-focused</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Keywords
+                </label>
+                <input
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="Example: custom dog tag, pet gift, dog mom"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <button
+                onClick={handleGenerate}
+                disabled={isLoading}
+                className="w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
+                {isLoading ? "Generating..." : "Generate Description"}
+              </button>
+
+              {error && (
+                <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-xl font-semibold text-slate-900">
+                Generated result
+              </h2>
+
+              {result && (
+                <button
+                  onClick={handleCopy}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              )}
+            </div>
+
+            <div className="min-h-[520px] rounded-xl border border-slate-200 bg-slate-50 p-4">
+              {result ? (
+                <pre className="whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                  {result}
+                </pre>
+              ) : (
+                <div className="flex h-full min-h-[480px] items-center justify-center text-center">
+                  <p className="max-w-sm text-sm text-slate-500">
+                    Fill in the product details and click Generate Description.
+                    The AI-generated product listing will appear here.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
